@@ -1,0 +1,27 @@
+make[1]: Entering directory `/afs/cs.cmu.edu/project/ics/im/labs/shlab/src'
+./sdriver.pl -t trace01.txt -s ./tsh -a "-p"
+#
+# trace01.txt - Process builtin quit command.
+#
+./sdriver.pl -t trace02.txt -s ./tsh -a "-p"
+#
+# trace02.txt - Run a foreground job.
+#
+tsh> quit
+./sdriver.pl -t trace03.txt -s ./tsh -a "-p"
+#
+# trace03.txt - Run a background job.
+#
+tsh> ./myspin 1 &
+[1] (26252) ./myspin 1 &
+./sdriver.pl -t trace04.txt -s ./tsh -a "-p"
+#
+# trace04.txt - Process jobs builtin command.
+#
+tsh> ./myspin 2 &
+[1] (26256) ./myspin 2 &
+tsh> ./myspin 3 &
+[2] (26258) ./myspin 3 &
+tsh> jobs
+[1] (26256) Running ./myspin 2 &
+[2] (26258) Running ./myspin 3 &
