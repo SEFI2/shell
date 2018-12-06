@@ -187,12 +187,12 @@ void eval(char *cmdline)
 		}
 		/* Parent waits for foreground job to terminate */
 		if (pid != 0 && !bg) {
-			int status;
-			if (waitpid (pid, &status, 0) < 0)
-				unix_error ("waitfg : waitpid error");
+			waitfg(pid);
 		}
-		else
+		else {
+			
 			printf("%d %s", pid, cmdline);
+		}
 	} else {
 		if (strcmp("exit", argv[0]) == 0)
 			exit(0);
@@ -283,7 +283,8 @@ int builtin_cmd(char **argv)
 		"compopt", "continue", "declare", "dirs", "disown", "echo", "enable", "eval", "exec", "exit", "export", "false",
 		"fc", "fg", "getopts", "hash", "help", "history", "jobs", "kill", "let", "local", "logout", "mapfile", "popd",
 		"printf", "pushd", "pwd", "read", "readarray", "readonly", "return", "set", "shift", "shopt", "source", "suspend",
-		"test", "times", "trap", "true", "type", "typeset", "ulimit", "umask", "unalias", "unset", "wait", "ls", NULL			
+		"test", "times", "trap", "true", "type", "typeset", "ulimit", "umask", "unalias", "unset", "wait", "ls",
+"ps", NULL			
 	};	
 	int i = 0;
 	for (i = 0 ; cands[i] != NULL ; ++i) {
@@ -310,6 +311,10 @@ void do_bgfg(char **argv)
  */
 void waitfg(pid_t pid)
 {
+	int status;			
+	if (waitpid (pid, &status, 0) < 0)
+		unix_error ("waitfg : waitpid error");
+			
     return;
 }
 
@@ -324,6 +329,7 @@ void waitfg(pid_t pid)
  */
 void sigint_handler(int sig) 
 {
+	exit(0);
     // SKIP IMPLEMENTING THIS FUNCTION (by TA)
     return;
 }
@@ -335,6 +341,7 @@ void sigint_handler(int sig)
  */
 void sigtstp_handler(int sig) 
 {
+	exit(0);
     // SKIP IMPLEMENTING THIS FUNCTION (by TA)
     return;
 }
