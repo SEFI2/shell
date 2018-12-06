@@ -165,7 +165,38 @@ int main(int argc, char **argv)
 */
 void eval(char *cmdline) 
 {
-    return;
+	char *argv[MAXARGS]; 
+	char buf[MAXLINE];   
+	/* Holds modified command line */
+	int bg;              
+	pid_t pid;           
+	strcpy(buf, cmdline);
+	bg = parseline(buf, argv);
+	if (argv[0] == NULL)
+		return;   
+	/* Ignore empty lines */
+	if(!builtin_cmd(argv)) {
+		if((pid = fork()) == 0) {   /* Child runs user job */
+			if (execve(argv[0], argv, environ) < 0) {
+				printf ("%s: Command not found.\n", argv[0]);
+				exit(0);
+			}
+		}
+		/* Parent waits for foreground job to terminate */
+		if (pid != 0 && !bg) {
+			int status;
+			if (waitpid (pid, &status, 0) < 0)
+				unix_error ("waitfg : waitpid error");
+		}
+		else
+			printf("%d %s", pid, cmdline);
+	} else {
+		if (system (buf) < 0) {
+			printf ("%s: haha Command not found.\n", argv[0]);
+			exit(0);
+		}
+	}
+	return;
 }
 
 /* 
@@ -177,6 +208,7 @@ void eval(char *cmdline)
  */
 int parseline(const char *cmdline, char **argv) 
 {
+
     static char array[MAXLINE]; /* holds local copy of command line */
     char *buf = array;          /* ptr that traverses command line */
     char *delim;                /* points to first space delimiter */
@@ -231,6 +263,22 @@ int parseline(const char *cmdline, char **argv)
  */
 int builtin_cmd(char **argv) 
 {
+	static char* cands[] = 
+	{
+		".", ":", "[", "alias", "bg", "bind", "break", "builtin", "caller", "cd", "command", "compgen", "complete",
+		"compopt", "continue", "declare", "dirs", "disown", "echo", "enable", "eval", "exec", "exit", "export", "false",
+		"fc", "fg", "getopts", "hash", "help", "history", "jobs", "kill", "let", "local", "logout", "mapfile", "popd",
+		"printf", "pushd", "pwd", "read", "readarray", "readonly", "return", "set", "shift", "shopt", "source", "suspend",
+		"test", "times", "trap", "true", "type", "typeset", "ulimit", "umask", "unalias", "unset", "wait", NULL			
+	};	
+	int i = 0;
+	for (i = 0 ; cands[i] != NULL ; ++i) {
+		//printf("%s -- %s\n", cands[i], argv[0]);
+		if (strcmp(argv[0], cands[i]) == 0) {
+			return 1;		
+		}
+	}
+
     return 0;     /* not a builtin command */
 }
 
