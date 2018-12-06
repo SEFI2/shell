@@ -174,7 +174,10 @@ void eval(char *cmdline)
 	bg = parseline(buf, argv);
 	if (argv[0] == NULL)
 		return;   
+	
+
 	/* Ignore empty lines */
+
 	if(!builtin_cmd(argv)) {
 		if((pid = fork()) == 0) {   /* Child runs user job */
 			if (execve(argv[0], argv, environ) < 0) {
@@ -191,10 +194,21 @@ void eval(char *cmdline)
 		else
 			printf("%d %s", pid, cmdline);
 	} else {
+		if (strcmp("exit", argv[0]) == 0)
+			exit(0);
+		if (strcmp("cd", argv[0]) == 0) {
+			if(chdir(argv[1]) < 0) {
+				printf ("%s: Directory is not found\n", argv[1]);
+			}					
+					
+			return;					
+		}
+		
 		if (system (buf) < 0) {
 			printf ("%s: haha Command not found.\n", argv[0]);
 			exit(0);
 		}
+
 	}
 	return;
 }
@@ -269,7 +283,7 @@ int builtin_cmd(char **argv)
 		"compopt", "continue", "declare", "dirs", "disown", "echo", "enable", "eval", "exec", "exit", "export", "false",
 		"fc", "fg", "getopts", "hash", "help", "history", "jobs", "kill", "let", "local", "logout", "mapfile", "popd",
 		"printf", "pushd", "pwd", "read", "readarray", "readonly", "return", "set", "shift", "shopt", "source", "suspend",
-		"test", "times", "trap", "true", "type", "typeset", "ulimit", "umask", "unalias", "unset", "wait", NULL			
+		"test", "times", "trap", "true", "type", "typeset", "ulimit", "umask", "unalias", "unset", "wait", "ls", NULL			
 	};	
 	int i = 0;
 	for (i = 0 ; cands[i] != NULL ; ++i) {
