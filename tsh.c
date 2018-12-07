@@ -179,6 +179,7 @@ void eval(char *cmdline)
 	/* Ignore empty lines */
 
 	if(!builtin_cmd(argv)) {
+		
 		if((pid = fork()) == 0) {   /* Child runs user job */
 			if (execve(argv[0], argv, environ) < 0) {
 				printf ("%s: Command not found.\n", argv[0]);
@@ -186,8 +187,11 @@ void eval(char *cmdline)
 			}
 		}
 		/* Parent waits for foreground job to terminate */
-		if (pid != 0 && !bg) {
-			waitfg(pid);
+		if (pid != 0) {
+			if (addjob(jobs, pid, (bg ? BG : FG), cmdline) != 0)
+				return;
+			if (!bg)						
+				waitfg(pid);
 		}
 		else {
 			
@@ -200,8 +204,15 @@ void eval(char *cmdline)
 			if(chdir(argv[1]) < 0) {
 				printf ("%s: Directory is not found\n", argv[1]);
 			}					
-					
 			return;					
+		}
+		if (strcmp("jobs", argv[0]) == 0) {
+			listjobs(jobs);
+			return;														
+		}				
+		if (strcmp("fg", argv[0]) == 0 || strcmp("bg", argv[0]) == 0) {
+			do_bgfg(argv);
+			return;
 		}
 		
 		if (system (buf) < 0) {
@@ -303,6 +314,54 @@ int builtin_cmd(char **argv)
 void do_bgfg(char **argv) 
 {
     // SKIP IMPLEMENTING THIS FUNCTION (by TA)
+	if (argv[1] == NULL)
+	{
+		printf ("%s command requires PID or %%jobid argument", argv[0]);
+		return;
+	}
+	long val;
+	int is_jobid = 0;
+	char *next;
+	struct job_t *job;
+
+	if (*argv[1] == '%') {
+		is_jobid = 1;
+		argv[1] ++;
+	}
+	val = strtol(argv[1], &next, 10);
+		
+	if (next == argv[1] || *next != '\0') {
+		printf("%s: argument must be a PID or %%jobid", argv[1]);
+		return;
+	}
+	
+	if (is_jobid) {
+		job = getjobjid(jobs, (int)val);
+		if (job == NULL) {
+			printf("%%%s: No such job\n", argv[1]);
+			return;		
+		}
+	} else {	
+		job = getjobpid(jobs, (pid_t)val);
+		if (job == NULL) {
+			printf("(%s): No such process\n", argv[1]);
+			return;		
+		}
+	}
+
+	if (strcmp(argv[1], "fg") == 0) {
+		if (job->state == ST)
+			kill(job->pid, SIGCONT);
+		job->state = FG;
+		waitfg(job->pid);
+	} else {
+		if (job->state == ST)
+			kill(job->pid, SIGCONT);
+		job->state = BG;		
+	}
+
+
+
     return;
 }
 
