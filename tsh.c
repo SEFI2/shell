@@ -200,7 +200,7 @@ void eval(char *cmdline)
 			printf("%d %s", pid, cmdline);
 		}
 	} else {
-		if (strcmp("exit", argv[0]) == 0 || strcmp("quit", argv[0]) == 0 )
+		if (strcmp("quit", argv[0]) == 0 )
 			exit(0);
 		if (strcmp("cd", argv[0]) == 0) {
 			if(chdir(argv[1]) < 0) {
@@ -296,7 +296,7 @@ int builtin_cmd(char **argv)
 		"compopt", "continue", "declare", "dirs", "disown", "echo", "enable", "eval", "exec", "exit", "export", "false",
 		"fc", "fg", "getopts", "hash", "help", "history", "jobs", "kill", "let", "local", "logout", "mapfile", "popd",
 		"printf", "pushd", "pwd", "read", "readarray", "readonly", "return", "set", "shift", "shopt", "source", "suspend",
-		"test", "times", "trap", "true", "type", "typeset", "ulimit", "umask", "unalias", "unset", "wait", "ls",
+		"test", "times", "trap", "true", "type", "typeset", "ulimit", "umask", "unalias", "unset", "wait", "ls", "quit",
 "ps", NULL			
 	};	
 	int i = 0;
@@ -399,11 +399,11 @@ void sigint_handler(int sig)
 		printf("PID: %d\n", child_pid);
 	
 	if (child_pid == 0) {
-		printf("current pid: %d\n", getpid());		
-		signal(SIGINT, SIG_DFL);
+		//printf("current pid: %d\n", getpid());		
+		//signal(SIGINT, SIG_DFL);
 	 kill(getpid(), SIGINT);			
 	} else {
-		kill(child_pid, SIGINT);			
+		kill(-child_pid, SIGINT);			
 	}
     return;
 }
@@ -422,13 +422,14 @@ void sigtstp_handler(int sig)
 		printf("PID: %d\n", child_pid);
 	
 	if (child_pid == 0) {
-		signal(SIGTSTP, SIG_DFL);
-
-		kill(getpid(), SIGTSTP);			
-		printf("current pid: %d\n", getpid());		
+		//signal(SIGTSTP, SIG_DFL);
+		//while ((child_pid = waitpid(-1, &status, WNOHANG|WUNTRACED)) > 0) { 
+		//}
+		//kill(getpid(), SIGTSTP);			
+		//printf("current pid: %d\n", getpid());		
 	} else {
 
-		kill(child_pid, SIGTSTP);			
+		kill(-child_pid, SIGTSTP);			
 	}
     return;
 }
