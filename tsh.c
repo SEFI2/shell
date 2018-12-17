@@ -178,6 +178,7 @@ void eval(char *cmdline)
 	if(!builtin_cmd(argv)) {
 		
 		if((pid = fork()) == 0) {  
+			setpgid(0, 0);
 			if (execve(argv[0], argv, environ) < 0) {
 				printf ("%s: Command not found.\n", argv[0]);
 				exit(0);
@@ -188,6 +189,11 @@ void eval(char *cmdline)
 				return;
 			if (!bg)						
 				waitfg(pid);
+			else {
+				
+				struct job_t *current_job = getjobpid(jobs, pid);
+				printf("[%d] (%d) %s", current_job->jid, current_job->pid, current_job->cmdline);
+			}
 
 		}
 		else {
@@ -393,7 +399,9 @@ void sigint_handler(int sig)
 		printf("PID: %d\n", child_pid);
 	
 	if (child_pid == 0) {
-		kill(getpid(), SIGINT);			
+		printf("current pid: %d\n", getpid());		
+		signal(SIGINT, SIG_DFL);
+	 kill(getpid(), SIGINT);			
 	} else {
 		kill(child_pid, SIGINT);			
 	}
@@ -414,8 +422,12 @@ void sigtstp_handler(int sig)
 		printf("PID: %d\n", child_pid);
 	
 	if (child_pid == 0) {
+		signal(SIGTSTP, SIG_DFL);
+
 		kill(getpid(), SIGTSTP);			
+		printf("current pid: %d\n", getpid());		
 	} else {
+
 		kill(child_pid, SIGTSTP);			
 	}
     return;
